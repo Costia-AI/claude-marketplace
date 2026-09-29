@@ -145,3 +145,12 @@ describe("renderMarkdown", () => {
     expect(rebuilt("- a\n- b")).toBe("<ul><li>a</li><li>b</li></ul>");
   });
 });
+
+describe("itemPath", () => {
+  test("keeps workspace/slug as two segments: an encoded slash is refused by the server", async () => {
+    const { itemPath } = await import("../src/setup/catalog.ts");
+    expect(itemPath("costia-ai/play-store")).toBe("/v1/catalog/items/costia-ai/play-store");
+    expect(itemPath("0192f0aa-0000-7000-8000-000000000001")).toBe("/v1/catalog/items/0192f0aa-0000-7000-8000-000000000001");
+    expect(itemPath("a b/c?d")).toBe("/v1/catalog/items/a%20b/c%3Fd");
+  });
+});

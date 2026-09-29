@@ -1,4 +1,4 @@
-import { download, get, send, ApiError } from "../api/client.ts";
+import { get, send, ApiError } from "../api/client.ts";
 import type { SetupData } from "./resolver.ts";
 import { validateSpec, type FlowSpec, type Scope } from "./spec.ts";
 import type { Context } from "./state.ts";
@@ -46,10 +46,18 @@ export interface ItemDetail {
   files: { path: string; sha256: string; size: number; mode?: string }[];
 }
 
+/**
+ * The API path of an item: its id, or "workspace/slug" as two segments. An
+ * encoded slash (`%2F`) is refused by the server before it reaches a route.
+ */
+export function itemPath(ref: string): string {
+  return `/v1/catalog/items/${ref.split("/", 2).map(encodeURIComponent).join("/")}`;
+}
+
 /** `GET /v1/catalog/items/{ref}`, flattened: the item and its latest published version. */
 export async function itemDetail(ref: string): Promise<ItemDetail> {
   const detail = await get<{ item?: Omit<ItemDetail, "files" | "payload">; files?: ItemDetail["files"]; payload?: ItemDetail["payload"] } & Partial<ItemDetail>>(
-    `/v1/catalog/items/${encodeURIComponent(ref)}`,
+    itemPath(ref),
   );
   const item = detail.item ?? (detail as unknown as ItemDetail);
   return { ...item, tags: item.tags ?? [], files: detail.files ?? [], payload: detail.payload ?? null };
@@ -75,19 +83,13 @@ export async function createFlowItem(input: { workspace?: string; slug: string; 
 
 export async function addFlowVersion(item: string, spec: FlowSpec, options: { publish: boolean; changelog?: string }): Promise<{ version: number; published: boolean }> {
   assertValidSpec(spec);
-  return send("POST", `/v1/catalog/items/${encodeURIComponent(item)}/versions`, { payload: spec, publish: options.publish, changelog: options.changelog });
-}
-
-/** The path of a file inside its item, from its install path (docs/plugin-protocol.md). */
-function insidePath(kind: string, slug: string, installPath: string): string {
-  if (kind === "SKILL") return installPath.replace(new RegExp(`^\\.claude/skills/${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`), "");
-  if (kind === "HOOK") return installPath.replace(new RegExp(`^\\.claude/hooks/${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`), "");
-  return `${slug}.md`;
+  const id = item.includes("/") ? (await itemDetail(item)).id : item;
+  return send("POST", `/v1/catalog/items/${encodeURIComponent(id)}/versions`, { payload: spec, publish: options.publish, changelog: options.changelog });
 }
 
 /**
  * A new version of an item that also requires `flow`: same files, same payload,
- * one more `requires` entry. Files are re-sent from their blobs byte for byte.
+ * one more `requires` entry. The backend keeps the previous version's files.
  */
 export async function attachFlow(itemRef: string, flowRef: string, params: Record<string, string | boolean>, options: { publish: boolean; changelog?: string }): Promise<{ version: number; published: boolean }> {
   const item = await itemDetail(itemRef);
@@ -97,15 +99,9 @@ export async function attachFlow(itemRef: string, flowRef: string, params: Recor
   const requires = ((payload.requires as { flow: string; params?: Record<string, unknown> }[] | undefined) ?? []).filter((r) => r.flow !== flow.id);
   requires.push({ flow: flow.id, ...(Object.keys(params).length ? { params } : {}) });
   payload.requires = requires;
-  const files: Record<string, string> = {};
-  const modes: Record<string, string> = {};
-  for (const file of item.files) {
-    const inside = insidePath(item.kind, item.slug, file.path);
-    files[inside] = (await download(`/v1/blobs/${file.sha256}`)).toString("base64");
-    if (file.mode === "0755") modes[inside] = "0755";
-  }
+  // keepFiles: the new version carries the previous one's files as they are, binaries and modes included.
   return send("POST", `/v1/catalog/items/${encodeURIComponent(item.id)}/versions`, {
-    ...(Object.keys(files).length ? { files, modes } : {}),
+    keepFiles: true,
     payload,
     publish: options.publish,
     changelog: options.changelog ?? `Requires the setup flow ${flow.workspace}/${flow.slug}`,

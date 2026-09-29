@@ -9,6 +9,7 @@ import { syncCheckout } from "../../sync/runner.ts";
 import { guarded, workdir } from "../server.ts";
 import { personalWorkspace } from "./projects.ts";
 import { summarize } from "../../sync/summary.ts";
+import { itemPath } from "../../setup/catalog.ts";
 
 const KINDS = ["SKILL", "SUBAGENT", "COMMAND", "HOOK", "MCP_SERVER", "PLUGIN_REF", "AGENTS_SECTION", "SETTINGS_FRAGMENT", "OUTPUT_STYLE", "SETUP_FLOW"] as const;
 
@@ -160,8 +161,9 @@ export function registerTools(server: McpServer, _: unknown): void {
     "get_item",
     { description: "A catalogue item with its latest version's files or content.", inputSchema: z.object({ item: z.string() }) },
     guarded(async ({ item }) => {
-      const i = await get<Item & { files?: { path: string; size: number }[]; content?: string; changelog?: string }>(`/v1/catalog/items/${encodeURIComponent(item)}`);
-      return [line(i), i.changelog ? `Latest change: ${i.changelog}` : "", i.content ?? "", ...(i.files ?? []).map((f) => `  ${f.path} (${f.size} bytes)`), `${config.web}/catalog/${i.id}`]
+      const detail = await get<{ item: Item; files?: { path: string; size: number }[]; payload?: { content?: string } | null; changelog?: string }>(itemPath(item));
+      const i = detail.item;
+      return [line(i), detail.changelog ? `Latest change: ${detail.changelog}` : "", detail.payload?.content ?? "", ...(detail.files ?? []).map((f) => `  ${f.path} (${f.size} bytes)`), `${config.web}/catalog/${i.id}`]
         .filter(Boolean)
         .join("\n");
     }),
