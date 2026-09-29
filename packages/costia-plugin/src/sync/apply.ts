@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { files as stateFiles } from "../state/paths.ts";
 import { readJson, writeJson } from "../state/json-file.ts";
-import { mergeAgents, normalize, noticeLine, type AgentsResult } from "./agents-md.ts";
+import { mergeAgents, normalize, ruleNoticeLine, type AgentsResult } from "./agents-md.ts";
 import { updateGitExclude } from "./git-exclude.ts";
 import { approvalHash, flatten, mergeOwnedEntries, type JsonMergeResult, type PendingEntry } from "./json-merge.ts";
 import { checkNoCaseCollisions, checkPath, checkUserPath, PathRejected, STRUCTURED } from "./paths.ts";
@@ -145,7 +145,7 @@ function validateFiles(files: ManifestFile[], check: (path: string) => unknown =
 
 /** The whole content of the rules file a private or user section becomes. */
 export function rulesFileContent(section: ManifestSection): string {
-  return `${noticeLine([section.title]).replace("these sections", "this file, the section")}\n\n${normalize(section.content)}\n`;
+  return `${ruleNoticeLine(section.title)}\n\n${normalize(section.content)}\n`;
 }
 
 /** Sections that are whole files (private, user) as manifest entries whose content is generated here. */

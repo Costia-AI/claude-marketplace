@@ -120,6 +120,14 @@ export function noticeLine(titles: string[]): string {
   );
 }
 
+/** The first line of a managed rules file: the whole file is one section. */
+export function ruleNoticeLine(title: string): string {
+  return (
+    `> **Managed by Costia** — this file is the section "${title.replace(/"/g, "'")}", kept in sync by Costia. ` +
+    "Do not edit it here: change it with the `costia` MCP tool `edit_section` (the change reaches everywhere it is used)."
+  );
+}
+
 /**
  * Brings `current` (null when the file does not exist) to the desired sections,
  * never touching text outside the managed blocks and never overwriting a block

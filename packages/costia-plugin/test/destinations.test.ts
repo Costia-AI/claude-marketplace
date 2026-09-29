@@ -49,7 +49,8 @@ describe("private destination", () => {
     expect(report.errors).toEqual([]);
     expect(read(".claude/skills/mine/SKILL.md")).toBe(mine);
     expect(read(".claude/rules/costia--me--my-rules.md")).toContain("Short answers.");
-    expect(read(".claude/rules/costia--me--my-rules.md").startsWith("> **Managed by Costia**")).toBe(true);
+    expect(read(".claude/rules/costia--me--my-rules.md").startsWith("> **Managed by Costia** — this file is the section")).toBe(true);
+    expect(read(".claude/rules/costia--me--my-rules.md")).not.toContain("Everything else in this file");
     expect(existsSync(join(repo.path, "AGENTS.md"))).toBe(false);
 
     const lock = JSON.parse(read(".claude/costia.lock.json"));
