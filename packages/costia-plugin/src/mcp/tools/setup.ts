@@ -17,6 +17,8 @@ import type { Manifest, UserManifest } from "../../sync/types.ts";
 import { guarded, workdir } from "../server.ts";
 
 const SCOPE_LABEL = { machine: "this computer", user: "you", project: "the project", project_user: "you in this project" } as const;
+/** How often a step is done, for the pending list: "once per computer". */
+const SCOPE_ONCE = { machine: "computer", user: "person", project: "project", project_user: "person in the project" } as const;
 
 /** The running bundle, so the command Claude is handed starts this same plugin version. */
 function entry(): string {
@@ -78,7 +80,7 @@ function describePending(flows: FlowStatus[]): string[] {
   const lines: string[] = [];
   for (const f of flows) {
     if (f.errors.length) lines.push(`- ${f.entry.name} (${f.entry.ref}) is not valid: ${f.errors.join("; ")}`);
-    for (const s of f.pending) lines.push(`- ${f.entry.name}: ${s.title} — done by ${SCOPE_LABEL[s.scope]}`);
+    for (const s of f.pending) lines.push(`- ${f.entry.name}: ${s.title} (once per ${SCOPE_ONCE[s.scope]})`);
     if (!f.pending.length && !f.errors.length && !f.verified) lines.push(`- ${f.entry.name}: its checks have not passed on this machine yet`);
   }
   return lines;
@@ -240,7 +242,11 @@ export function registerTools(server: McpServer, _: unknown): void {
       if (step.type !== "claude") throw new Error(`"${step.title}" is for a person, in the wizard (start_setup).`);
       if (step.check) {
         const r = await runCheck(step.check, { target: w.checkoutRoot, checkout: w.root, flow: flow.id, approved: await approvals(10_000) });
-        if (!r.ok) return `Not done yet: ${r.reason}.`;
+        if (!r.ok) {
+          // The check's output stays on the machine; Claude can run the same command to read it.
+          const rerun = "run" in step.check ? ` Run \`${step.check.run.join(" ")}\` from the ${step.check.base === "checkout" ? "checkout's root" : "target folder"} to see what is missing.` : "";
+          return `Not done yet: ${r.reason}.${rerun}`;
+        }
       }
       await recordStep(w.context, flow.id, step.id, step.scope, flow.entry.version);
       return `Recorded "${step.title}" as done for ${SCOPE_LABEL[step.scope]}.`;
@@ -353,7 +359,8 @@ export function registerTools(server: McpServer, _: unknown): void {
       inputSchema: z.object({ flow: z.string(), version: z.number().int().positive() }),
     },
     guarded(async ({ flow, version }) => {
-      await send("POST", `/v1/catalog/items/${encodeURIComponent(flow)}/versions/${version}/publish`);
+      const id = flow.includes("/") ? (await itemDetail(flow)).id : flow;
+      await send("POST", `/v1/catalog/items/${encodeURIComponent(id)}/versions/${version}/publish`);
       return `Published version ${version} of ${flow}.`;
     }),
   );

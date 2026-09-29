@@ -422,7 +422,9 @@ export async function runWizard(options: WizardOptions): Promise<number> {
   touch();
   emit({ event: "listening" });
   options.onListening?.(url);
-  if (options.open !== false && !openBrowser(url)) process.stderr.write(`Open ${url} to continue the setup.\n`);
+  // Always on stderr as well: the tab may be closed, or the browser may be on another screen.
+  const opened = options.open !== false && openBrowser(url);
+  process.stderr.write(opened ? `The setup page is open: ${url}\n` : `Open ${url} to continue the setup.\n`);
 
   const stop = () => {
     emit({ event: "aborted", reason: "interrupted" });

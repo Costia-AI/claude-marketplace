@@ -38,7 +38,7 @@ export function runApproval(flow: string, check: Check): string {
 
 /** A human label for a check, for lists and reports. */
 export function describeCheck(check: Check): string {
-  if ("run" in check) return `runs ${check.run.join(" ")}`;
+  if ("run" in check) return `\`${check.run.join(" ")}\` exits ${check.expectExit ?? 0}`;
   switch (check.builtin) {
     case "command":
       return `${check.command}${check.minVersion ? ` ≥ ${check.minVersion}` : ""} is installed`;
