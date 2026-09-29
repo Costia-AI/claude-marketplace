@@ -1,0 +1,24 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test
+      - name: dist is up to date
+        run: |
+          bun run build
+          git diff --exit-code --stat -- plugins/costia/dist || (echo "plugins/costia/dist is stale: run 'bun run build' and commit it" && exit 1)
+      - name: runs on Node 20
+        run: node plugins/costia/dist/costia.mjs version

@@ -1,0 +1,11 @@
+{
+  "name": "costia",
+  "displayName": "Costia Claude Tools",
+  "description": "Your Claude Code setup as a Costia account: projects and their on-disk layout, a tagged catalogue of skills, plugins, MCP servers and AGENTS.md sections, managed AGENTS.md sections that update themselves, and tasks — at claude.costia.app, with nothing running locally.",
+  "version": "0.1.0",
+  "author": { "name": "Costia", "url": "https://costia.app" },
+  "homepage": "https://claude.costia.app",
+  "repository": "https://github.com/Costia-AI/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["costia", "agents-md", "skills", "catalog", "tasks", "team", "onboarding"]
+}

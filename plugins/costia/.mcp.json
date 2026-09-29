@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "costia": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/costia.mjs", "mcp"]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# Costia Claude marketplace
+
+Claude Code plugins by [Costia](https://costia.app).
+
+## `costia` — Costia Claude Tools
+
+Your Claude Code setup as a Costia account, at [claude.costia.app](https://claude.costia.app). It manages:
+
+- **Projects and their layout.** A layout describes how a project is checked out: a parent repository with children, symlinks to shared repositories, one folder or several. `/costia:clone` rebuilds a project anywhere.
+- **A tagged catalogue** of skills, subagents, commands, hooks, MCP servers, marketplace plugins and `AGENTS.md` sections. `/costia:init` asks what kind of application a repository is and imports what fits.
+- **Managed `AGENTS.md` sections.** They update themselves in every repository that uses them. They are changed with `/costia:section`, never by hand.
+- **Tasks**, including the manual ones only you can do, on a board in the web.
+
+Nothing runs locally besides the plugin. You sign in with your Costia account; it is free. Organisations and inviting people need Costia Premium.
+
+```
+/plugin marketplace add Costia-AI/claude-marketplace
+/plugin install costia@costia-ai
+```
+
+It needs Node.js 20 or newer. Commands: `/costia:login`, `/costia:status`, `/costia:init`, `/costia:sync`, `/costia:clone`, `/costia:adopt`, `/costia:tasks`, `/costia:publish`, `/costia:section`, `/costia:logout`.
+
+**What it may change in your repositories.** Only `AGENTS.md`, `CLAUDE.md`, `.mcp.json` and `.claude/`, and never by following a symlink.
+
+- Anything that runs code or widens permissions waits for your explicit approval on your machine: hooks, permission rules, local MCP servers, scripts and marketplace plugins.
+- Nothing is committed for you.

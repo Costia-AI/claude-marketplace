@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "costia-ai",
+  "description": "Claude Code plugins by Costia.",
+  "owner": { "name": "Costia", "url": "https://github.com/Costia-AI" },
+  "plugins": [
+    {
+      "name": "costia",
+      "displayName": "Costia Claude Tools",
+      "description": "Your Claude Code setup as a Costia account: projects and how they are laid out on disk, a tagged catalogue of skills, plugins, MCP servers and AGENTS.md sections installed per kind of application, managed AGENTS.md sections that update themselves, and tasks — all at claude.costia.app, with nothing running locally.",
+      "version": "0.1.0",
+      "author": { "name": "Costia", "url": "https://costia.app" },
+      "category": "productivity",
+      "keywords": ["costia", "agents-md", "skills", "catalog", "tasks", "team", "onboarding"],
+      "license": "MIT",
+      "source": "./plugins/costia",
+      "homepage": "https://claude.costia.app",
+      "repository": "https://github.com/Costia-AI/claude-marketplace"
+    }
+  ]
+}
