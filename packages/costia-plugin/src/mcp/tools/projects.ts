@@ -80,7 +80,7 @@ export function registerTools(server: McpServer, _: unknown): void {
       const cwd = workdir(path);
       const found = checkoutFor(cwd);
       if (!found) {
-        return `${cwd} is not linked to a Costia project on this machine. Use adopt_checkout to link it to an existing project, or create_project to make one.${readCredentials() ? "" : " (Not signed in yet.)"}`;
+        return `${cwd} is not linked to a Costia project on this machine. Use adopt_checkout to link it to an existing project, or create_project to make one.${readCredentials() || config.staticToken ? "" : " (Not signed in yet.)"}`;
       }
       const project = await findProject(found.checkout.projectId);
       return [
