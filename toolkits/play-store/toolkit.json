@@ -1,0 +1,25 @@
+{
+  "kind": "SKILL",
+  "slug": "play-store",
+  "name": "Google Play",
+  "description": "Google Play listing, screenshots, graphics, release notes and submissions through the Play Developer API, with a service account whose key never leaves Infisical.",
+  "tags": ["infisical", "android", "google-play", "mobile", "react-native"],
+  "defaultDestination": "repo",
+  "requires": [
+    { "flow": "node-runtime" },
+    { "flow": "play-service-account" }
+  ],
+  "include": {
+    "scripts/params.mjs": "../_shared/params.mjs",
+    "scripts/infisical.mjs": "../_shared/infisical.mjs",
+    "scripts/with-secrets.mjs": "../_shared/with-secrets.mjs",
+    "scripts/with-secrets.sh": "../infisical-secrets/scripts/with-secrets.sh"
+  },
+  "modes": {
+    "scripts/play-listing.mjs": "0755",
+    "scripts/play-release-notes.mjs": "0755",
+    "scripts/play-verify.mjs": "0755",
+    "scripts/with-secrets.mjs": "0755",
+    "scripts/with-secrets.sh": "0755"
+  }
+}

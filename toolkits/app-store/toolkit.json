@@ -1,0 +1,29 @@
+{
+  "kind": "SKILL",
+  "slug": "app-store",
+  "name": "App Store Connect",
+  "description": "App Store listing, screenshots, age rating, EAS submissions and App Review through the App Store Connect API, with a team key that never leaves Infisical and guards against the common rejections.",
+  "tags": ["infisical", "ios", "app-store", "mobile", "react-native"],
+  "defaultDestination": "repo",
+  "requires": [
+    { "flow": "node-runtime" },
+    { "flow": "asc-api-key" },
+    { "flow": "app-store-listing-rules" }
+  ],
+  "include": {
+    "scripts/params.mjs": "../_shared/params.mjs",
+    "scripts/infisical.mjs": "../_shared/infisical.mjs",
+    "scripts/with-secrets.mjs": "../_shared/with-secrets.mjs",
+    "scripts/with-secrets.sh": "../infisical-secrets/scripts/with-secrets.sh"
+  },
+  "modes": {
+    "scripts/asc-listing.mjs": "0755",
+    "scripts/asc-screenshots.mjs": "0755",
+    "scripts/asc-age-rating.mjs": "0755",
+    "scripts/asc-review.mjs": "0755",
+    "scripts/asc-verify.mjs": "0755",
+    "scripts/eas-submit-ios.mjs": "0755",
+    "scripts/with-secrets.mjs": "0755",
+    "scripts/with-secrets.sh": "0755"
+  }
+}

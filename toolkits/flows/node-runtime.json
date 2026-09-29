@@ -1,0 +1,29 @@
+{
+  "slug": "node-runtime",
+  "name": "Node.js 20+",
+  "description": "Node.js 20 or newer on this computer, for scripts that use fetch, node:crypto and ES modules.",
+  "tags": ["node", "tooling"],
+  "spec": {
+    "schema": 1,
+    "summary": "Node.js 20 or newer. The toolkit scripts are plain Node with no dependencies to install.",
+    "params": [],
+    "steps": [
+      {
+        "id": "node",
+        "title": "Install Node.js 20 or newer",
+        "scope": "machine",
+        "type": "check",
+        "check": { "builtin": "command", "command": "node", "minVersion": "20" },
+        "instructions": {
+          "*": "Install Node.js 20 or newer from https://nodejs.org (an LTS release), or with a version manager (`mise use -g node@lts`, `fnm install --lts`, `nvm install --lts`). Open a new terminal and press **Check**.",
+          "darwin": "`brew install node`, or a version manager: `mise use -g node@lts` / `fnm install --lts`. Open a new terminal and press **Check**.",
+          "linux": "Use your distribution's `nodejs` package only if it is 20 or newer; otherwise a version manager (`mise use -g node@lts`, `fnm install --lts`) or https://nodejs.org. Open a new terminal and press **Check**.",
+          "windows": "`winget install OpenJS.NodeJS.LTS`, or the installer from https://nodejs.org. Open a new terminal and press **Check**."
+        }
+      }
+    ],
+    "verify": [
+      { "builtin": "command", "command": "node", "minVersion": "20" }
+    ]
+  }
+}

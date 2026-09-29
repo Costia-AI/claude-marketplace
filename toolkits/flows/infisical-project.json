@@ -1,0 +1,71 @@
+{
+  "slug": "infisical-project",
+  "name": "Infisical project",
+  "description": "The Infisical project, environment and folder this repository keeps its secrets in.",
+  "tags": ["infisical", "secrets"],
+  "spec": {
+    "schema": 1,
+    "summary": "Which Infisical project, environment and folder this repository reads its secrets from. Chosen once per project; every member uses the same one.",
+    "params": [
+      {
+        "key": "infisicalDomain",
+        "label": "Infisical instance",
+        "description": "https://app.infisical.com (US cloud), https://eu.infisical.com (EU cloud), or your self-hosted URL, without /api.",
+        "type": "url",
+        "scope": "project",
+        "default": "https://app.infisical.com",
+        "pattern": "^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~-]+)*$",
+        "env": "INFISICAL_DOMAIN",
+        "editable": true
+      },
+      {
+        "key": "infisicalProject",
+        "label": "Project slug",
+        "description": "The slug in Project settings (not the display name).",
+        "type": "string",
+        "scope": "project",
+        "pattern": "^[a-z0-9][a-z0-9-]{1,63}$",
+        "env": "INFISICAL_PROJECT"
+      },
+      {
+        "key": "infisicalEnv",
+        "label": "Environment",
+        "description": "The environment slug this repository's tools read: prod, staging, dev…",
+        "type": "string",
+        "scope": "project",
+        "default": "prod",
+        "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+        "env": "INFISICAL_ENV",
+        "editable": true
+      },
+      {
+        "key": "infisicalPath",
+        "label": "Folder",
+        "description": "The folder inside the environment. / unless the project organises secrets in folders.",
+        "type": "string",
+        "scope": "project",
+        "default": "/",
+        "pattern": "^/([A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*)?$",
+        "env": "INFISICAL_PATH",
+        "editable": true
+      }
+    ],
+    "requires": [ { "flow": "infisical-login" } ],
+    "steps": [
+      {
+        "id": "project",
+        "title": "Create or pick the Infisical project",
+        "scope": "project",
+        "type": "input",
+        "params": ["infisicalDomain", "infisicalProject", "infisicalEnv", "infisicalPath"],
+        "instructions": {
+          "*": "1. Open your Infisical instance and sign in with the same account the CLI uses.\n2. **Reuse** the project this repository's secrets already live in, or **create** one: *Secrets Management → Add project*. One project per application keeps access and rotation simple; a shared project for everything means everyone who can read one secret can read all of them.\n3. In the project, open **Project settings** and copy its **slug** (lowercase, with dashes — not the display name).\n4. Check the environment exists (*prod* by default; the slugs are under **Project settings → Environments**).\n\nFill the fields and press **Check**: it asks Infisical, with your CLI's token, whether the project is visible."
+        },
+        "check": { "builtin": "infisical.project-exists", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}" }
+      }
+    ],
+    "verify": [
+      { "builtin": "infisical.project-exists", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}" }
+    ]
+  }
+}

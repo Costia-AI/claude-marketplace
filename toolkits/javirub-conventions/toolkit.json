@@ -1,0 +1,10 @@
+{
+  "kind": "AGENTS_SECTION",
+  "slug": "javirub-conventions",
+  "name": "javirub's conventions",
+  "title": "Authorship and language",
+  "description": "No Claude co-author trailers or credits anywhere; everything an agent reads, and every commit, branch, tag and merge request, in English; chat in the user's language.",
+  "tags": ["javirub"],
+  "defaultDestination": "user",
+  "requires": []
+}

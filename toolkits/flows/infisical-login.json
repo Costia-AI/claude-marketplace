@@ -1,0 +1,27 @@
+{
+  "slug": "infisical-login",
+  "name": "Infisical sign-in",
+  "description": "The Infisical CLI signed in on this computer, or a machine identity token in the environment.",
+  "tags": ["infisical", "secrets"],
+  "spec": {
+    "schema": 1,
+    "summary": "A signed-in Infisical CLI on this computer. The token stays in the CLI; scripts ask it for one when they run.",
+    "params": [],
+    "requires": [ { "flow": "infisical-cli" } ],
+    "steps": [
+      {
+        "id": "login",
+        "title": "Sign in to Infisical",
+        "scope": "machine",
+        "type": "check",
+        "check": { "builtin": "infisical.logged-in" },
+        "instructions": {
+          "*": "In a terminal, run:\n\n```sh\ninfisical login\n```\n\nPick **your instance** when it asks: US cloud (`app.infisical.com`), EU cloud (`eu.infisical.com`) or your self-hosted URL. The next step asks for the same instance; a token from one instance does not work on another.\n\nOn a server or in CI, export `INFISICAL_TOKEN` from a machine identity instead.\n\nThen press **Check**."
+        }
+      }
+    ],
+    "verify": [
+      { "builtin": "infisical.logged-in" }
+    ]
+  }
+}

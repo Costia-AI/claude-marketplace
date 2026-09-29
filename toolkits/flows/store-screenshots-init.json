@@ -1,0 +1,145 @@
+{
+  "slug": "store-screenshots-init",
+  "name": "Store screenshots, wired into the app",
+  "description": "Prepares an Expo / React Native app for framed store screenshots: a capture config, a seed module excluded from production bundles, the test that proves it, and the package scripts.",
+  "tags": [
+    "react-native",
+    "expo",
+    "mobile",
+    "ios",
+    "android",
+    "screenshots"
+  ],
+  "spec": {
+    "schema": 1,
+    "summary": "Wires this app for store screenshots taken from its Expo web export: Claude writes the capture config, a seed module that fills the app with believable data only in screenshot builds, a test that keeps that module out of production, and the package scripts.",
+    "params": [
+      {
+        "key": "storeShotsAppDir",
+        "label": "App folder",
+        "description": "The Expo app (the folder with app.json and package.json), relative to the folder this skill is installed in. . when they are the same.",
+        "type": "string",
+        "scope": "project",
+        "default": ".",
+        "pattern": "^(\\.|[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*)$",
+        "env": "STORE_SHOTS_APP_DIR",
+        "editable": true
+      },
+      {
+        "key": "screenshotSeedEnv",
+        "label": "Seed switch",
+        "description": "The environment variable that, set to 1 at build time, keeps the seed module in the bundle.",
+        "type": "string",
+        "scope": "project",
+        "default": "SCREENSHOT_SEED",
+        "pattern": "^[A-Z][A-Z0-9_]{2,63}$",
+        "env": "SCREENSHOT_SEED_ENV",
+        "editable": true
+      },
+      {
+        "key": "storeAssetsDir",
+        "label": "Output folder",
+        "description": "Where the framed screenshots are written, relative to the app folder. The store scripts read it too.",
+        "type": "string",
+        "scope": "project",
+        "default": "store-assets",
+        "pattern": "^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$",
+        "env": "STORE_ASSETS_DIR",
+        "editable": true
+      }
+    ],
+    "requires": [
+      {
+        "flow": "node-runtime"
+      },
+      {
+        "flow": "chrome"
+      }
+    ],
+    "steps": [
+      {
+        "id": "app",
+        "title": "Say where the app is",
+        "scope": "project",
+        "type": "input",
+        "params": [
+          "storeShotsAppDir",
+          "screenshotSeedEnv",
+          "storeAssetsDir"
+        ],
+        "instructions": {
+          "*": "The screenshots are taken from the app's **Expo web export** in headless Chrome at phone and tablet sizes, then framed with a caption for each store slot (Play 1080×1920, App Store iPhone 6.9\" 1320×2868 and iPad 13\" 2064×2752).\n\nThe app therefore has to **run on web** (`npx expo export -p web` must work). Claude does the wiring after this: it reads the app and writes the files; you review the diff.\n\nThe defaults suit most apps. Change the app folder when the Expo app is a subfolder of where this skill is installed."
+        }
+      },
+      {
+        "id": "config",
+        "title": "Write the capture config",
+        "scope": "project",
+        "type": "claude",
+        "prompt": "Create `{{storeShotsAppDir}}/store-shots.config.mjs` from `.claude/skills/store-screenshots/templates/store-shots.config.example.mjs` (relative to the folder the skill is installed in).\n\n1. Read `app.json` / `app.config.*` and `package.json` in `{{storeShotsAppDir}}`. Confirm it is an Expo app with a web target; if `expo export -p web` is not possible (no `react-native-web`, native-only modules at the root), stop and tell the user what is missing instead of writing anything.\n2. Find the app's locales (i18n resources, `expo-localization` setup, `locales/` folders). Map each capture locale (`en-US`) to its caption language (`en`). Ask the user which languages the store listings use if there are more than two.\n3. Choose **five screens** that say what the app is for, in listing order: the first one is shown larger and most people never swipe past the third. Prefer screens whose content the seed can fill. For each, pick a stable anchor: a `testID` (add one to the component if none exists) or a visible text per language.\n4. Write captions that name only what is **visible** in that screen, two short lines each, in every caption language. Ask the user to review them.\n5. Fill `brand` from the app's theme tokens (background, text, one or two accents) and a font file from the app's assets if one exists.\n6. Set `build.env` so the web build is hermetic: the seed switch `{{screenshotSeedEnv}}=1`, and every `EXPO_PUBLIC_*` URL of a backend emptied so the capture never calls production.\n7. If the app needs a session to show its screens, set `session.localStorage` to a **fake** signed-in state the app accepts offline — never a real token.\n8. Keep `outDir` as `{{storeAssetsDir}}`.",
+        "check": {
+          "run": [
+            "node",
+            ".claude/skills/store-screenshots/scripts/capture.mjs",
+            "--validate",
+            "config"
+          ],
+          "base": "target",
+          "timeoutMs": 20000
+        }
+      },
+      {
+        "id": "seed",
+        "title": "Add the screenshot seed, excluded from production",
+        "scope": "project",
+        "type": "claude",
+        "prompt": "Create the seed module and the bundler rule that keeps it out of every build that does not ask for it. Use `.claude/skills/store-screenshots/templates/screenshot-seed.example.ts` and `metro-seed-swap.example.js` as the starting point.\n\n1. Put the module where the app keeps services (for example `src/services/screenshot-seed.ts`) and record its import specifier (the alias the app uses, e.g. `@/services/screenshot-seed`) in `seed.module` of `store-shots.config.mjs`, and its path relative to the app folder in `seed.file`.\n2. The module writes **fixed, believable, uneven** data through the app's own data layer (its database, store or cache — read how the app persists data first), and exposes `globalThis.__screenshotSeed = async (lang) => ids`, returning any ids the config's `path(ids)` functions need. Same ids on every run; dates relative to today (midnight) so \"this week\" screens are never empty. Captions promise nothing the data does not show.\n3. Import it once, for its side effect, from the root layout / entry file — and from nowhere else.\n4. In `metro.config.js`, empty the module unless `process.env.{{screenshotSeedEnv}} === \"1\"`: a `resolver.resolveRequest` that returns `{ type: \"empty\" }` for that exact specifier, chained to any existing resolver (keep wrappers such as NativeWind/Uniwind/Sentry as they are, and apply the rule where the file's comments say resolvers must go). Keep the specifier in a constant named `SCREENSHOT_SEED_MODULE`.\n5. Explain in a comment in both files why the module must never ship: it writes into a real user's data.",
+        "check": {
+          "run": [
+            "node",
+            ".claude/skills/store-screenshots/scripts/capture.mjs",
+            "--validate",
+            "seed"
+          ],
+          "base": "target",
+          "timeoutMs": 20000
+        }
+      },
+      {
+        "id": "guard",
+        "title": "Add the test that keeps the seed out of production",
+        "scope": "project",
+        "type": "claude",
+        "prompt": "Add a test, in the app's existing test runner and folder, adapted from `.claude/skills/store-screenshots/templates/screenshot-seed-excluded.test.example.ts`. It must fail when:\n\n- the seed module no longer exists;\n- `metro.config.js` stops declaring `SCREENSHOT_SEED_MODULE` with the same specifier the app imports, or stops checking `process.env.{{screenshotSeedEnv}} === \"1\"`, or stops returning `{ type: \"empty\" }` for it;\n- any file other than the entry file and the module itself mentions `screenshot-seed`;\n- the switch turns on anything else.\n\nRun the test and make sure it passes. Then record the test's path in `seed.test` of `store-shots.config.mjs`.",
+        "check": {
+          "run": [
+            "node",
+            ".claude/skills/store-screenshots/scripts/capture.mjs",
+            "--validate",
+            "guard"
+          ],
+          "base": "target",
+          "timeoutMs": 20000
+        }
+      },
+      {
+        "id": "scripts",
+        "title": "Add the package scripts and try a dry run",
+        "scope": "project",
+        "type": "claude",
+        "prompt": "In `{{storeShotsAppDir}}/package.json`:\n\n- add `playwright-core` as a dev dependency with the package manager the app already uses (never a downloaded browser: the scripts drive the installed Chrome from `CHROME_PATH`);\n- add `\"store:shots\"` running `node <path to the skill>/scripts/web-preview.mjs` and `\"store:frames\"` running `node <path to the skill>/scripts/frames.mjs`, with paths relative to the app folder;\n- add `{{storeAssetsDir}}/raw/` to the app's `.gitignore` (the bare captures are rebuilt every run; the framed ones may be committed).\n\nThen run `node <path to the skill>/scripts/capture.mjs --validate all`, fix what it reports, and finally run `bun run store:shots` (or the npm/yarn/pnpm equivalent) once. Show the user where the pictures are and ask them to look at every one before uploading anything.",
+        "check": {
+          "run": [
+            "node",
+            ".claude/skills/store-screenshots/scripts/capture.mjs",
+            "--validate",
+            "all"
+          ],
+          "base": "target",
+          "timeoutMs": 30000
+        }
+      }
+    ],
+    "verify": []
+  }
+}

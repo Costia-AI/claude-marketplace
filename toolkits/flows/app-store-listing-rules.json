@@ -1,0 +1,47 @@
+{
+  "slug": "app-store-listing-rules",
+  "name": "App Store listing rules",
+  "description": "What an iOS listing of this app must never say, and where its copy lives, checked before anything is sent to App Store Connect.",
+  "tags": ["ios", "app-store", "mobile"],
+  "spec": {
+    "schema": 1,
+    "summary": "Guards the App Store listing against the rejections that cost the most time: words Apple refuses in an iOS listing, and where the copy files are.",
+    "params": [
+      {
+        "key": "iosForbiddenWords",
+        "label": "Words the iOS listing must not contain",
+        "description": "Comma-separated, case-insensitive. Guideline 2.3.10: no other platform in the listing.",
+        "type": "string",
+        "scope": "project",
+        "default": "Android,Google Play,Play Store",
+        "pattern": "^[^\\n\\r]{0,500}$",
+        "env": "ASC_FORBIDDEN_WORDS",
+        "editable": true
+      },
+      {
+        "key": "appstoreCopyDir",
+        "label": "Copy folder",
+        "description": "Relative to the app folder: <dir>/<locale>/<field>.txt.",
+        "type": "string",
+        "scope": "project",
+        "default": "store/appstore",
+        "pattern": "^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$",
+        "env": "ASC_COPY_DIR",
+        "editable": true
+      }
+    ],
+    "steps": [
+      {
+        "id": "rules",
+        "title": "Confirm the listing rules",
+        "scope": "project",
+        "type": "input",
+        "params": ["iosForbiddenWords", "appstoreCopyDir"],
+        "instructions": {
+          "*": "The listing scripts refuse to send copy that breaks these, before the first request:\n\n- **Guideline 2.3.10** — an iOS listing may not name another platform. A description shared with Google Play usually has a line about Android: the iOS copy must not.\n- **Guideline 1.5** — the support URL must reach a page that answers without signing in (`support_url.txt` is required per locale).\n- **Guideline 3.1.2** — an app selling subscriptions needs its terms (Apple's standard EULA or your own) linked from the description or the EULA field; keep it when editing.\n\nAdd any other word your listing must avoid, and change the copy folder if yours is elsewhere."
+        }
+      }
+    ],
+    "verify": []
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "slug": "chrome",
+  "name": "Chrome for screenshots",
+  "description": "An installed Chrome or Chromium that headless capture scripts drive through playwright-core.",
+  "tags": ["tooling", "screenshots"],
+  "spec": {
+    "schema": 1,
+    "summary": "The browser the capture scripts drive. playwright-core never downloads one: it uses the one installed here.",
+    "params": [
+      {
+        "key": "chromePath",
+        "label": "Chrome executable",
+        "description": "A command on PATH (google-chrome, chromium) or the absolute path of the executable.",
+        "type": "string",
+        "scope": "machine",
+        "default": "google-chrome",
+        "pattern": "^[^\\n\\r]{1,400}$",
+        "env": "CHROME_PATH",
+        "editable": true
+      }
+    ],
+    "steps": [
+      {
+        "id": "chrome",
+        "title": "Point to an installed Chrome",
+        "scope": "machine",
+        "type": "input",
+        "params": ["chromePath"],
+        "check": { "builtin": "command", "command": "{{chromePath}}" },
+        "instructions": {
+          "*": "Install Google Chrome or Chromium, then enter the executable: a command on your `PATH` or its absolute path. Press **Check**.",
+          "linux": "Install Google Chrome (https://www.google.com/chrome/) or Chromium from your distribution. Enter `google-chrome`, `google-chrome-stable` or `chromium` — whichever `command -v` finds — and press **Check**.",
+          "darwin": "Install Google Chrome from https://www.google.com/chrome/ and enter:\n\n```\n/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\n```\n\nThen press **Check**.",
+          "windows": "Install Google Chrome and enter its path, usually:\n\n```\nC:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\n```\n\nThen press **Check**."
+        }
+      }
+    ],
+    "verify": [
+      { "builtin": "command", "command": "{{chromePath}}" }
+    ]
+  }
+}

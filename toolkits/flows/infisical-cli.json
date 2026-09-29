@@ -1,0 +1,29 @@
+{
+  "slug": "infisical-cli",
+  "name": "Infisical CLI",
+  "description": "The Infisical command-line tool, installed on this computer.",
+  "tags": ["infisical", "secrets"],
+  "spec": {
+    "schema": 1,
+    "summary": "The Infisical CLI on this computer. Scripts use it only to sign in; secrets travel over the REST API.",
+    "params": [],
+    "steps": [
+      {
+        "id": "install",
+        "title": "Install the Infisical CLI",
+        "scope": "machine",
+        "type": "check",
+        "check": { "builtin": "command", "command": "infisical" },
+        "instructions": {
+          "*": "Install the Infisical CLI from https://infisical.com/docs/cli/overview, open a new terminal so it is on your `PATH`, and press **Check**.",
+          "darwin": "With Homebrew:\n\n```sh\nbrew install infisical/get-cli/infisical\n```\n\nThen press **Check**. (Without Homebrew, see https://infisical.com/docs/cli/overview.)",
+          "linux": "Debian and Ubuntu:\n\n```sh\ncurl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash\nsudo apt-get update && sudo apt-get install -y infisical\n```\n\nFedora, RHEL, openSUSE, Alpine and Arch have their own package in https://infisical.com/docs/cli/overview. With Homebrew on Linux: `brew install infisical/get-cli/infisical`.\n\nOpen a new terminal if `infisical --version` is not found, then press **Check**.",
+          "windows": "With Scoop:\n\n```powershell\nscoop bucket add org https://github.com/Infisical/scoop-infisical.git\nscoop install infisical\n```\n\nor with winget: `winget install infisical`. Open a new terminal and press **Check**."
+        }
+      }
+    ],
+    "verify": [
+      { "builtin": "command", "command": "infisical" }
+    ]
+  }
+}

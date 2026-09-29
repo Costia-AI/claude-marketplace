@@ -2,10 +2,14 @@
   "name": "costia-claude-marketplace",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "bun run --cwd packages/costia-plugin build",
     "test": "bun run --cwd packages/costia-plugin test",
-    "typecheck": "bun run --cwd packages/costia-plugin typecheck"
+    "typecheck": "bun run --cwd packages/costia-plugin typecheck",
+    "toolkits:validate": "node toolkits/validate.mjs",
+    "toolkits:publish": "node toolkits/publish.mjs"
   }
 }

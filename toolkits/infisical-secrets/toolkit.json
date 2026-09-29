@@ -1,0 +1,22 @@
+{
+  "kind": "SKILL",
+  "slug": "infisical-secrets",
+  "name": "Infisical secrets",
+  "description": "Create, rotate, check and use Infisical secrets without anyone seeing their values: REST API with values in request bodies, never in argv, output or the transcript.",
+  "tags": ["infisical", "secrets"],
+  "defaultDestination": "repo",
+  "requires": [
+    { "flow": "node-runtime" },
+    { "flow": "infisical-project" }
+  ],
+  "include": {
+    "scripts/params.mjs": "../_shared/params.mjs",
+    "scripts/infisical.mjs": "../_shared/infisical.mjs",
+    "scripts/with-secrets.mjs": "../_shared/with-secrets.mjs"
+  },
+  "modes": {
+    "scripts/secret.mjs": "0755",
+    "scripts/with-secrets.mjs": "0755",
+    "scripts/with-secrets.sh": "0755"
+  }
+}

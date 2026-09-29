@@ -1,0 +1,19 @@
+{
+  "kind": "SKILL",
+  "slug": "store-screenshots",
+  "name": "Store screenshots",
+  "description": "Framed App Store and Google Play screenshots of an Expo / React Native app, taken from its web export in headless Chrome with seeded data that never ships.",
+  "tags": ["react-native", "expo", "mobile", "ios", "android", "screenshots"],
+  "defaultDestination": "repo",
+  "requires": [
+    { "flow": "store-screenshots-init" }
+  ],
+  "include": {
+    "scripts/params.mjs": "../_shared/params.mjs"
+  },
+  "modes": {
+    "scripts/capture.mjs": "0755",
+    "scripts/frames.mjs": "0755",
+    "scripts/web-preview.mjs": "0755"
+  }
+}

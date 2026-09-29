@@ -1,0 +1,151 @@
+{
+  "slug": "asc-api-key",
+  "name": "App Store Connect API key",
+  "description": "An App Store Connect team API key, its .p8, key id and issuer id stored in Infisical, and the app's Apple ID.",
+  "tags": ["ios", "app-store", "infisical", "mobile"],
+  "spec": {
+    "schema": 1,
+    "summary": "A team API key App Store Connect accepts for this app: created under Users and Access → Integrations, its three parts kept only in Infisical, and the app's Apple ID recorded.",
+    "params": [
+      {
+        "key": "appleAppId",
+        "label": "Apple ID of the app",
+        "description": "The numeric Apple ID in App Store Connect → the app → App Information (also eas.json ascAppId).",
+        "type": "string",
+        "scope": "project",
+        "pattern": "^[0-9]{6,12}$",
+        "env": "ASC_APP_ID"
+      },
+      {
+        "key": "ascKeySecret",
+        "label": "Secret name for the .p8",
+        "type": "string",
+        "scope": "project",
+        "default": "APPLE_ASC_API_KEY_P8",
+        "pattern": "^[A-Z][A-Z0-9_]{2,127}$",
+        "env": "ASC_KEY_SECRET",
+        "editable": true
+      },
+      {
+        "key": "ascKeyIdSecret",
+        "label": "Secret name for the key id",
+        "type": "string",
+        "scope": "project",
+        "default": "APPLE_ASC_KEY_ID",
+        "pattern": "^[A-Z][A-Z0-9_]{2,127}$",
+        "env": "ASC_KEY_ID_SECRET",
+        "editable": true
+      },
+      {
+        "key": "ascIssuerIdSecret",
+        "label": "Secret name for the issuer id",
+        "type": "string",
+        "scope": "project",
+        "default": "APPLE_ASC_ISSUER_ID",
+        "pattern": "^[A-Z][A-Z0-9_]{2,127}$",
+        "env": "ASC_ISSUER_ID_SECRET",
+        "editable": true
+      }
+    ],
+    "requires": [ { "flow": "infisical-project" } ],
+    "steps": [
+      {
+        "id": "app",
+        "title": "Name the app",
+        "scope": "project",
+        "type": "input",
+        "params": ["appleAppId"],
+        "instructions": {
+          "*": "Open https://appstoreconnect.apple.com → **Apps** → your app → **App Information** (under *General*). Copy the **Apple ID** — a number of about ten digits, not the bundle id.\n\nThe app record must exist first (*Apps → + → New App*)."
+        }
+      },
+      {
+        "id": "api-access",
+        "title": "Make sure the team has API access",
+        "scope": "project",
+        "type": "confirm",
+        "instructions": {
+          "*": "Open **Users and Access → Integrations → App Store Connect API**.\n\n- If you see **Team Keys** with a **+** button, API access is on: press **Done**.\n- If you see **Request Access**, the **Account Holder** has to request it once for the whole team (it is granted immediately after accepting the terms). Only then can anyone with the Admin role create keys."
+        }
+      },
+      {
+        "id": "create-key",
+        "title": "Generate a team key",
+        "scope": "project",
+        "type": "confirm",
+        "instructions": {
+          "*": "In **Integrations → App Store Connect API → Team Keys**, press **+** (Generate API Key):\n\n1. **Name**: what uses it, e.g. `automation`.\n2. **Access**: **App Manager** is enough for listings, screenshots, age rating, TestFlight and submitting for review. Choose **Admin** only if the same key must also manage certificates and provisioning profiles (for example `eas build` creating credentials).\n3. Press **Generate**. Then, on the key's row:\n   - press **Download** — the `AuthKey_XXXXXXXXXX.p8` downloads **exactly once**; lose it and the only remedy is revoking the key and generating another;\n   - note the **Key ID** (10 characters, in the row);\n   - note the **Issuer ID** (a UUID, above the list of keys).\n\nPress **Done** when you have all three."
+        }
+      },
+      {
+        "id": "p8",
+        "title": "Store the .p8 in Infisical",
+        "scope": "project",
+        "type": "secret",
+        "rotate": true,
+        "secret": {
+          "store": "infisical",
+          "name": "{{ascKeySecret}}",
+          "domain": "{{infisicalDomain}}",
+          "project": "{{infisicalProject}}",
+          "env": "{{infisicalEnv}}",
+          "path": "{{infisicalPath}}",
+          "source": "file",
+          "accept": ".p8",
+          "maxBytes": 8192
+        },
+        "instructions": {
+          "*": "Drop the `AuthKey_….p8`. It goes straight to Infisical as **{{ascKeySecret}}**. Then delete the downloaded file: the copy that matters is now in Infisical."
+        }
+      },
+      {
+        "id": "key-id",
+        "title": "Store the key id",
+        "scope": "project",
+        "type": "secret",
+        "secret": {
+          "store": "infisical",
+          "name": "{{ascKeyIdSecret}}",
+          "domain": "{{infisicalDomain}}",
+          "project": "{{infisicalProject}}",
+          "env": "{{infisicalEnv}}",
+          "path": "{{infisicalPath}}",
+          "source": "text"
+        },
+        "instructions": {
+          "*": "Paste the **Key ID** (10 characters) from the key's row. It is stored as **{{ascKeyIdSecret}}** next to the key it belongs to."
+        }
+      },
+      {
+        "id": "issuer-id",
+        "title": "Store the issuer id",
+        "scope": "project",
+        "type": "secret",
+        "secret": {
+          "store": "infisical",
+          "name": "{{ascIssuerIdSecret}}",
+          "domain": "{{infisicalDomain}}",
+          "project": "{{infisicalProject}}",
+          "env": "{{infisicalEnv}}",
+          "path": "{{infisicalPath}}",
+          "source": "text"
+        },
+        "instructions": {
+          "*": "Paste the **Issuer ID** (a UUID shown above the list of team keys). It is stored as **{{ascIssuerIdSecret}}**."
+        }
+      }
+    ],
+    "verify": [
+      { "builtin": "infisical.secret-exists", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}", "env": "{{infisicalEnv}}", "path": "{{infisicalPath}}", "name": "{{ascKeySecret}}" },
+      { "builtin": "infisical.secret-exists", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}", "env": "{{infisicalEnv}}", "path": "{{infisicalPath}}", "name": "{{ascKeyIdSecret}}" },
+      { "builtin": "infisical.secret-exists", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}", "env": "{{infisicalEnv}}", "path": "{{infisicalPath}}", "name": "{{ascIssuerIdSecret}}" },
+      {
+        "builtin": "app-store-connect.access",
+        "p8": { "store": "infisical", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}", "env": "{{infisicalEnv}}", "path": "{{infisicalPath}}", "name": "{{ascKeySecret}}" },
+        "keyId": { "store": "infisical", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}", "env": "{{infisicalEnv}}", "path": "{{infisicalPath}}", "name": "{{ascKeyIdSecret}}" },
+        "issuerId": { "store": "infisical", "domain": "{{infisicalDomain}}", "project": "{{infisicalProject}}", "env": "{{infisicalEnv}}", "path": "{{infisicalPath}}", "name": "{{ascIssuerIdSecret}}" },
+        "appId": "{{appleAppId}}"
+      }
+    ]
+  }
+}
