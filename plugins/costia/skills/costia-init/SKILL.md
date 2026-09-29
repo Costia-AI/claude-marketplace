@@ -1,6 +1,6 @@
 ---
 name: costia-init
-description: The /costia:init flow — link a repository to a Costia project, choose tags per target, then choose which AGENTS.md sections, skills, plugins, MCP servers, subagents, commands and hooks to import from the catalogue.
+description: The /costia:init flow — link a repository to a Costia project, choose tags per target, then choose which AGENTS.md sections, skills, plugins, MCP servers, subagents, commands and hooks to import from the catalogue, where each lands (repo, private or user) and walk their setup flows.
 user-invocable: false
 ---
 
@@ -44,13 +44,26 @@ Rules for these questions:
 - When a group has more than 4 items, split it into several questions by tag.
 - Offer the web as an alternative for long lists: `https://claude.costia.app/p/<project>/config`.
 
-Then call `set_selection` with the chosen items and the target's tags.
+Then ask **where** the chosen items land, once for the whole selection unless the user wants to decide per item:
+
+- **repo**: committed with the repository, for everyone in the project. This is the default.
+- **private**: in this checkout but excluded from git, only for this user.
+- **user**: the user's own `~/.claude`, in every project. Only skills, subagents, commands, output styles and AGENTS.md sections can go there.
+
+Call `set_selection` with the repo items, then again with `destination: "private"` for the private ones. Install each **user** item with `install_item` and `destination: "user"`.
 
 ## 4. Finish
 
 `set_selection` syncs the checkout. Report what was written.
 
 If anything waits for approval, say what it is and offer `sync_review`. The user approves each change in a form, and nothing sensitive is applied until then.
+
+If an item is **held until its setup is done**, its setup flow has steps the user still has to do. For example: install a CLI, create a project in a secret manager, give a service account access.
+
+1. Call `start_setup`.
+2. Run the command it returns in the background and follow it with Monitor.
+3. Let the user work in the browser page it opens. Never ask for secrets in the chat.
+4. When it completes, carry out the setup steps meant for Claude (`setup_status`), calling `complete_claude_step` after each.
 
 Remind the user of two things:
 

@@ -19,5 +19,8 @@ An item is installed in other repositories, often by other people, so it has to 
    - An item for every repository gets the tag `general`.
 4. **Avoid duplicates.** Call `search_catalog` first. If the item exists and the user owns it, publish a new version (`item` argument) with a one-line `changelog`.
 5. **Publish** with `publish_item`, then give the item's web link.
+6. **Prerequisites outside the repository.** If the item needs a CLI, a login, a secret or console access, do not describe that setup in its text. Write or reuse a setup flow (the `setup-flow-authoring` skill), and attach it with `attach_flow`, so nobody gets the item until it works.
+7. **Default destination.** Say whether the item is meant for the repository (shared), private use or the user's own `~/.claude`. Personal conventions, for example, belong in `~/.claude`. The installer still decides.
+8. **Share it.** To offer it beyond the workspace, add it to a store (`create_store`, `add_to_store`, `share_store`). The flows it requires become visible with it.
 
 AGENTS.md sections are not published from files: they are created on the web or changed with `edit_section`.
