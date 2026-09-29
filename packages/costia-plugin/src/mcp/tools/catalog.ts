@@ -10,7 +10,7 @@ import { guarded, workdir } from "../server.ts";
 import { personalWorkspace } from "./projects.ts";
 import { summarize } from "../../sync/summary.ts";
 
-const KINDS = ["SKILL", "SUBAGENT", "COMMAND", "HOOK", "MCP_SERVER", "PLUGIN_REF", "AGENTS_SECTION", "SETTINGS_FRAGMENT", "OUTPUT_STYLE"] as const;
+const KINDS = ["SKILL", "SUBAGENT", "COMMAND", "HOOK", "MCP_SERVER", "PLUGIN_REF", "AGENTS_SECTION", "SETTINGS_FRAGMENT", "OUTPUT_STYLE", "SETUP_FLOW"] as const;
 
 interface Item {
   id: string;
@@ -196,18 +196,19 @@ export function registerTools(server: McpServer, _: unknown): void {
         remove: z.array(z.string()).default([]),
         tags: z.array(z.string()).optional(),
         floating: z.boolean().default(true).describe("Follow new published versions automatically"),
+        destination: z.enum(["repo", "private"]).default("repo").describe("repo: committed for everyone; private: only for you, excluded from git (install_item also offers user, your ~/.claude)"),
         path: z.string().optional(),
       }),
     },
-    guarded(async ({ target, add, remove, tags, floating, path }) => {
+    guarded(async ({ target, add, remove, tags, floating, destination, path }) => {
       const found = checkoutFor(workdir(path));
       if (!found) throw new Error("Link this folder to a project first (create_project or adopt_checkout).");
-      const saved = await send<{ version: number }>("POST", `/v1/projects/${found.checkout.projectId}/config/selection`, { target, add, remove, tags, floating });
+      const saved = await send<{ version: number }>("POST", `/v1/projects/${found.checkout.projectId}/config/selection`, { target, add, remove, tags, floating, destination });
       if (!found.checkout.targets.includes(target) && existsSync(targetPath(found.root, target))) {
         found.checkout.targets.push(target);
         registerCheckout(found.root, found.checkout);
       }
-      return `Config version ${saved.version} saved.\n${summarize(await syncCheckout(found.root, found.checkout))}`;
+      return `Config version ${saved.version} saved.\n${summarize(await syncCheckout(found.root, found.checkout, { autoVerify: true }))}`;
     }),
   );
 

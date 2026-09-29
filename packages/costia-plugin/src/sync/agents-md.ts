@@ -125,7 +125,7 @@ export function noticeLine(titles: string[]): string {
  * never touching text outside the managed blocks and never overwriting a block
  * edited by hand.
  */
-export function mergeAgents(current: string | null, desired: DesiredSection[]): AgentsResult {
+export function mergeAgents(current: string | null, desired: DesiredSection[], hold: Set<string> = new Set()): AgentsResult {
   for (const section of desired) {
     if (sectionHash(section.content) !== section.sha256) {
       throw new MalformedAgentsFile(`section ${section.id} does not match its hash`);
@@ -177,7 +177,11 @@ export function mergeAgents(current: string | null, desired: DesiredSection[]): 
     }
 
     keptTitles.set(block.id, target.title);
-    if (edited) {
+    if (hold.has(block.id)) {
+      // Held back by incomplete setup: what is there stays exactly as it is.
+      out.push(...original);
+      result.applied[block.id] = { version: block.version, sha256: block.recordedSha };
+    } else if (edited) {
       if (target.sha256 === block.recordedSha) result.drift.push(block.id);
       else result.conflicts.push(block.id);
       out.push(...original);
@@ -197,7 +201,7 @@ export function mergeAgents(current: string | null, desired: DesiredSection[]): 
   // New sections go after the last managed block, or right after the notice.
   const additions: string[] = [];
   for (const section of desired) {
-    if (present.has(section.id)) continue;
+    if (present.has(section.id) || hold.has(section.id)) continue;
     additions.push(...(additions.length || lastBlockEndInOut !== -1 ? [""] : []), ...renderBlock(section));
     result.added.push(section.id);
     result.applied[section.id] = { version: section.version, sha256: section.sha256 };

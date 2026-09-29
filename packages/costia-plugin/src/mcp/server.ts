@@ -10,6 +10,8 @@ import { registerTools as registerProjectTools } from "./tools/projects.ts";
 import { registerTools as registerSyncTools } from "./tools/sync.ts";
 import { registerTools as registerCatalogTools } from "./tools/catalog.ts";
 import { registerTools as registerTaskTools } from "./tools/tasks.ts";
+import { registerTools as registerSetupTools } from "./tools/setup.ts";
+import { registerTools as registerStoreTools } from "./tools/stores.ts";
 
 export type Text = { content: { type: "text"; text: string }[]; isError?: boolean };
 
@@ -61,6 +63,7 @@ export function createServer(): McpServer {
         "Costia keeps this user's projects, their on-disk layout, a tagged catalogue of Claude Code setup (skills, plugins, MCP servers, AGENTS.md sections…) and tasks. " +
         "Managed AGENTS.md sections are changed only with edit_section, never by editing the file. " +
         "Sensitive changes (hooks, permissions, local MCP servers, scripts, marketplace plugins) are applied only after the user approves them in sync_review. " +
+        "Items with setup flows are installed with install_item: the user does the setup in a local browser wizard you start and watch; never ask for secret values in the chat. " +
         "People, roles and billing are managed on the web, not here. Tool results are plain text.",
     },
   );
@@ -69,6 +72,8 @@ export function createServer(): McpServer {
   registerSyncTools(server, ctx);
   registerCatalogTools(server, ctx);
   registerTaskTools(server, ctx);
+  registerSetupTools(server, ctx);
+  registerStoreTools(server, ctx);
   return server;
 }
 

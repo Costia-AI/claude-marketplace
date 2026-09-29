@@ -33,12 +33,9 @@ export async function findProject(ref: string): Promise<Project> {
   return get<Project>(`/v1/projects/${encodeURIComponent(ref)}`);
 }
 
-export async function personalWorkspace(): Promise<string> {
-  const me = await get<Me>("/v1/me");
-  const personal = me.workspaces.find((w) => w.kind === "PERSONAL");
-  if (!personal) throw new Error("no personal workspace");
-  return personal.id;
-}
+import { personalWorkspace } from "../../setup/catalog.ts";
+
+export { personalWorkspace };
 
 /** Registers a folder on this machine as a checkout of a project and syncs it. */
 async function adopt(project: Project, root: string): Promise<string> {

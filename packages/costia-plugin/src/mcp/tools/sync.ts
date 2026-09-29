@@ -4,13 +4,19 @@ import { get, send } from "../../api/client.ts";
 import { config } from "../../config.ts";
 import { checkoutFor, targetPath } from "../../state/checkouts.ts";
 import { approve } from "../../state/trust.ts";
-import { approvals, syncCheckout } from "../../sync/runner.ts";
+import { approvals, syncCheckout, syncUser, type TargetOutcome } from "../../sync/runner.ts";
 import { summarize } from "../../sync/summary.ts";
 
 export { summarize };
 import { resolveConflict } from "../../sync/resolve.ts";
 import { sectionHash } from "../../sync/agents-md.ts";
 import { guarded, workdir } from "../server.ts";
+
+/** This checkout's targets plus the user destination (~/.claude), when there is one. */
+async function withUser(outcomes: TargetOutcome[], options: { dryRun?: boolean; approved?: Set<string>; autoVerify?: boolean }): Promise<TargetOutcome[]> {
+  const user = await syncUser(options);
+  return user ? [...outcomes, user] : outcomes;
+}
 
 function requireCheckout(path?: string) {
   const found = checkoutFor(workdir(path));
@@ -27,19 +33,21 @@ export function registerTools(server: McpServer, _: unknown): void {
     },
     guarded(async ({ path }) => {
       const { root, checkout } = requireCheckout(path);
-      return summarize(await syncCheckout(root, checkout, { dryRun: true }));
+      return summarize(await withUser(await syncCheckout(root, checkout, { dryRun: true }), { dryRun: true }));
     }),
   );
 
   server.registerTool(
     "sync_apply",
     {
-      description: "Applies the project's Claude setup to this checkout: everything that needs no approval. Sensitive changes stay pending for sync_review.",
+      description:
+        "Applies the project's Claude setup to this checkout, and the user's own items to ~/.claude: everything that needs no approval and whose setup is done. " +
+        "Sensitive changes stay pending for sync_review; items with incomplete setup stay held (setup_status).",
       inputSchema: z.object({ path: z.string().optional() }),
     },
     guarded(async ({ path }) => {
       const { root, checkout } = requireCheckout(path);
-      return summarize(await syncCheckout(root, checkout));
+      return summarize(await withUser(await syncCheckout(root, checkout, { autoVerify: true }), { autoVerify: true }));
     }),
   );
 
@@ -53,7 +61,7 @@ export function registerTools(server: McpServer, _: unknown): void {
     },
     guarded(async ({ path }, ctx) => {
       const { root, checkout } = requireCheckout(path);
-      const dry = await syncCheckout(root, checkout, { dryRun: true });
+      const dry = await withUser(await syncCheckout(root, checkout, { dryRun: true }), { dryRun: true });
       const pending = dry.flatMap((o) => (o.report?.pending ?? []).map((p) => ({ ...p, target: o.target })));
       if (!pending.length) return "Nothing waits for approval.";
 
@@ -62,8 +70,8 @@ export function registerTools(server: McpServer, _: unknown): void {
         const answer = await ctx.mcpReq.elicitInput({
           mode: "form",
           message:
-            `Costia wants to write ${item.kind === "file" ? "the file" : "the entry"} ${item.key}` +
-            `${item.target === "." ? "" : ` in ${item.target}`} — ${item.reason}.\n\n${item.preview}`,
+            (item.kind === "check" ? `A Costia setup flow wants to run a program on this machine: ${item.key}` : `Costia wants to write ${item.kind === "file" ? "the file" : "the entry"} ${item.key}`) +
+            `${item.target === "." ? "" : item.target === "~" ? " in ~/.claude" : ` in ${item.target}`} — ${item.reason}.\n\n${item.preview}`,
           requestedSchema: {
             type: "object",
             properties: { approve: { type: "boolean", title: "Allow this exact content on this machine" } },
@@ -75,7 +83,8 @@ export function registerTools(server: McpServer, _: unknown): void {
       }
       if (!accepted.length) return `Nothing approved; ${pending.length} change(s) still pending. They can also be approved for this device at ${config.web}/approvals.`;
       approve(accepted);
-      const outcomes = await syncCheckout(root, checkout, { approved: await approvals(10_000) });
+      const approved = await approvals(10_000);
+      const outcomes = await withUser(await syncCheckout(root, checkout, { approved, autoVerify: true }), { approved, autoVerify: true });
       return `Approved ${accepted.length} of ${pending.length}.\n${summarize(outcomes)}`;
     }),
   );

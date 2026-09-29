@@ -9,7 +9,7 @@ import { deviceFacts, getDevice } from "./state/device.ts";
 import { files } from "./state/paths.ts";
 import { removeFile } from "./state/json-file.ts";
 import { checkoutFor } from "./state/checkouts.ts";
-import { syncCheckout } from "./sync/runner.ts";
+import { syncCheckout, syncUser } from "./sync/runner.ts";
 import { undoSync } from "./sync/apply.ts";
 import { sessionStart } from "./hooks/session-start.ts";
 import { preToolUse } from "./hooks/pre-tool-use.ts";
@@ -76,9 +76,39 @@ async function sync(args: string[]): Promise<void> {
     console.log(`Restored ${restored.join(", ")} from ${dir}.`);
     return;
   }
+  const dryRun = args.includes("--dry-run");
   const here = checkoutFor(process.cwd());
-  if (!here) return console.log("This folder is not linked to a Costia project.");
-  console.log(summarize(await syncCheckout(here.root, here.checkout, { dryRun: args.includes("--dry-run") })));
+  const user = await syncUser({ dryRun, autoVerify: true });
+  if (!here) {
+    if (user) console.log(summarize([user]));
+    return console.log("This folder is not linked to a Costia project.");
+  }
+  console.log(summarize([...(await syncCheckout(here.root, here.checkout, { dryRun, autoVerify: true })), ...(user ? [user] : [])]));
+}
+
+function option(args: string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+  if (index !== -1) return args[index + 1];
+  return args.find((a) => a.startsWith(`${name}=`))?.slice(name.length + 1);
+}
+
+/**
+ * `setup serve`: the local wizard. Runs until the person finishes or cancels;
+ * Claude starts it in the background and follows its JSON-lines events.
+ */
+async function setup(args: string[]): Promise<void> {
+  if (args[0] !== "serve") return console.log("usage: costia setup serve [--checkout <path>] [--target <t>] [--items <id,...>] [--user] [--no-open]");
+  const { runWizard, heldItemsHere } = await import("./setup/wizard/server.ts");
+  const user = args.includes("--user");
+  const checkout = option(args, "--checkout") ?? process.cwd();
+  const target = option(args, "--target") ?? ".";
+  let items = (option(args, "--items") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (!items.length && !user) items = await heldItemsHere(checkout, target);
+  if (!items.length) {
+    console.log(JSON.stringify({ event: "completed", applied: [], claudeSteps: [] }));
+    return;
+  }
+  process.exitCode = await runWizard({ checkout, target, items, user, open: !args.includes("--no-open") });
 }
 
 async function main(argv: string[]): Promise<void> {
@@ -106,10 +136,12 @@ async function main(argv: string[]): Promise<void> {
       return status();
     case "sync":
       return sync(args);
+    case "setup":
+      return setup(args);
     case "version":
       return console.log(VERSION);
     default:
-      console.log("usage: costia <login|logout|status|sync [--dry-run|--undo]|mcp|hook session-start|hook pre-tool-use|version>");
+      console.log("usage: costia <login|logout|status|sync [--dry-run|--undo]|setup serve|mcp|hook session-start|hook pre-tool-use|version>");
   }
 }
 

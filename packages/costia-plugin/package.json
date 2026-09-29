@@ -1,6 +1,6 @@
 {
   "name": "@costia/claude-plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Source of the costia Claude Code plugin. Built into one dependency-free ESM file at plugins/costia/dist/costia.mjs.",

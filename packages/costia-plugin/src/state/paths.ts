@@ -29,4 +29,9 @@ export const files = {
   conflicts: () => join(stateDir(), "conflicts"),
   backups: () => join(stateDir(), "backups"),
   cache: () => join(stateDir(), "cache"),
+  /** Setup flow steps and parameters of scope `machine`, and which flows were verified here. */
+  setup: () => join(stateDir(), "setup.json"),
+  /** The merge base of the user destination (~/.claude). */
+  userLock: () => join(stateDir(), "user.lock.json"),
+  userManifest: () => join(stateDir(), "cache", "user-manifest.json"),
 };

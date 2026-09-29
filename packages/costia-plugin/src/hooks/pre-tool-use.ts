@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { basename } from "node:path";
+import { basename, dirname } from "node:path";
 import { managedContents } from "../sync/agents-md.ts";
 import { emit, readHookInput } from "./io.ts";
 
@@ -40,7 +40,21 @@ function predicted(current: string, input: Input): string | null {
 export async function preToolUse(): Promise<void> {
   const input = (await readHookInput<Input>()) as Input;
   const path = input.tool_input?.file_path;
-  if (!path || basename(path) !== "AGENTS.md") return;
+  if (!path) return;
+  if (/^costia--[\w.-]+\.md$/.test(basename(path)) && basename(dirname(path)) === "rules") {
+    // A private or user section: the whole file is managed.
+    emit({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason:
+          `${basename(path)} is a Costia-managed section, written whole by the costia plugin. ` +
+          "Change it for everyone who uses it with the costia MCP tool `edit_section`, or remove it from your setup (set_selection / the web). Rules of your own belong in another file.",
+      },
+    });
+    return;
+  }
+  if (basename(path) !== "AGENTS.md") return;
 
   let current: string;
   try {

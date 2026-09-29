@@ -1,7 +1,11 @@
 import type { DesiredSection } from "./agents-md.ts";
+import type { SetupData } from "../setup/resolver.ts";
+
+/** Where a selection lands (docs/plugin-protocol.md, "Destinations"). */
+export type Destination = "repo" | "private";
 
 /** What the backend says a target should contain (docs/plugin-protocol.md). */
-export interface Manifest {
+export interface Manifest extends SetupData {
   revision: string;
   project: string;
   target: string;
@@ -9,7 +13,19 @@ export interface Manifest {
   files: ManifestFile[];
   settings?: Record<string, unknown>;
   mcpServers?: Record<string, unknown>;
-  agents?: { sections: DesiredSection[] };
+  agents?: { sections: ManifestSection[] };
+}
+
+export interface ManifestSection extends DesiredSection {
+  item?: string;
+  destination?: Destination;
+}
+
+/** `GET /v1/me/manifest`: the user destination, paths relative to ~/.claude. */
+export interface UserManifest extends SetupData {
+  revision: string;
+  files: ManifestFile[];
+  agents?: { sections: ManifestSection[] };
 }
 
 export interface ManifestFile {
@@ -21,6 +37,7 @@ export interface ManifestFile {
   version?: number;
   /** A hint for display only; sensitivity is recomputed locally. */
   sensitive?: boolean;
+  destination?: Destination;
 }
 
 /** `.claude/costia.lock.json`: the merge base, committed with the repository. */
@@ -42,3 +59,12 @@ export function emptyLock(project: string, target: string): Lockfile {
 }
 
 export const LOCKFILE = ".claude/costia.lock.json";
+/** The merge base of `private` entries; excluded from git like the entries themselves. */
+export const LOCKFILE_LOCAL = ".claude/costia.lock.local.json";
+export const PARAMS_FILE = ".claude/costia/params.env";
+export const PARAMS_FILE_LOCAL = ".claude/costia/params.local.env";
+
+/** The managed rules file a private or user section becomes. */
+export function rulesFileName(sectionId: string): string {
+  return `costia--${sectionId.replace(/\//g, "--")}.md`;
+}

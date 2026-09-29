@@ -15,15 +15,18 @@ export function sha256(data: Buffer | string): string {
  */
 export class SafeRoot {
   readonly root: string;
+  private readonly check: (path: string) => string[];
 
-  constructor(root: string) {
+  /** `check` decides which relative paths exist for this root; a target's rules by default. */
+  constructor(root: string, check: (path: string) => string[] = (path) => checkPath(path, { internal: true })) {
     this.root = realpathSync(root);
     if (!lstatSync(this.root).isDirectory()) throw new Error(`${root} is not a directory`);
+    this.check = check;
   }
 
   /** Walks the parents of `path`, optionally creating them, refusing symlinks and non-directories. */
   private walkParents(path: string, create: boolean): string | null {
-    const segments = checkPath(path, { internal: true });
+    const segments = this.check(path);
     let current = this.root;
     for (const segment of segments.slice(0, -1)) {
       current = join(current, segment);

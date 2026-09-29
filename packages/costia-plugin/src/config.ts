@@ -2,7 +2,7 @@
  * Where the plugin talks to. Production values are the defaults; the environment
  * overrides them for local development against a backend on localhost.
  */
-export const VERSION = "0.1.0";
+export const VERSION = "0.2.0";
 
 export const config = {
   issuer: (process.env.COSTIA_ISSUER ?? "https://id.costia.app").replace(/\/$/, ""),
