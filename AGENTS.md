@@ -14,6 +14,7 @@ repository's `docs/` (`contract.md`, `plugin-protocol.md`, `security-model.md`).
 | `plugins/costia/` | **what Claude Code installs** — manifests, commands, skills, hooks, `dist/` |
 | `plugins/costia/dist/` | the built plugin: `costia.mjs` (CLI and hooks) and one lazily loaded chunk (the MCP server). **Built, committed, never edited by hand** |
 | `packages/costia-plugin/` | the TypeScript source and its tests |
+| `packages/costia-plugin/src/setup/` | setup flows: spec and validation, checks, providers (Infisical, Play, App Store Connect), state, gating, the local wizard |
 
 ## Commands
 
@@ -33,9 +34,22 @@ claude plugin validate plugins/costia
   statically (it lives in the lazy chunk); the PreToolUse hook returns in tens of milliseconds for
   files other than `AGENTS.md`. Every hook path swallows its errors.
 - **One write path.** Only `src/sync/apply.ts` (through `SafeRoot`) writes into a repository, and
-  only `AGENTS.md`, `CLAUDE.md`, `.mcp.json` and `.claude/**`. The layout materialiser writes
+  only `AGENTS.md`, `CLAUDE.md`, `.mcp.json` and `.claude/**`, plus the managed block of git's
+  `info/exclude` (`src/sync/git-exclude.ts`) for `private` items. The user destination
+  (`syncUserRoot`) writes under `~/.claude` only what `checkUserPath` allows. The layout materialiser writes
   clones and symlinks, and only after the user confirmed its plan. Add a test in
-  `test/apply.test.ts` or `test/safe-fs.test.ts` for any change to either.
+  `test/apply.test.ts`, `test/destinations.test.ts` or `test/safe-fs.test.ts` for any change to either.
+- **Secrets never travel.** `src/setup/providers/` sends a secret only in an HTTPS request body.
+  It is never on a command line, in a file, a log, the backend or a tool result.
+  `test/secrets.test.ts` checks argv.
+- **The wizard is local and never approves.** `src/setup/wizard/server.ts` listens on 127.0.0.1
+  under a random token, checks Host and Origin, and needs `X-Costia-Wizard` on writes.
+  `run` checks wait for the same approvals as any sensitive content (`sync_review`).
+- **Gating holds, never deletes.** An item with incomplete setup keeps what it already applied
+  (`holdFiles`, the `hold` set of `mergeAgents`). Settings, hooks and MCP entries cannot be
+  attributed to an item in the manifest, so they are not held; they are sensitive anyway.
+- **The wizard page embeds `renderMarkdown.toString()`.** Keep `src/setup/wizard/markdown.ts`
+  self-contained.
 - **Sensitivity is local.** `src/sync/sensitivity.ts` decides; server flags are hints.
 - **One version** in `plugin.json`, `marketplace.json`, `package.json` and `src/config.ts`
   (`test/manifest.test.ts` checks it).
