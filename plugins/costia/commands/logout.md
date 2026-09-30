@@ -1,5 +1,5 @@
 ---
-description: Sign out of Costia on this machine and revoke its refresh token.
+description: Sign out of Costia on this machine by forgetting its stored session. To revoke this device, use the web.
 allowed-tools: Bash(node:*)
 ---
 
