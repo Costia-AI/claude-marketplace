@@ -7,11 +7,11 @@
     {
       "name": "costia",
       "displayName": "Costia Claude Tools",
-      "description": "Your Claude Code setup as a Costia account: projects and how they are laid out on disk, a tagged catalogue of skills, plugins, MCP servers and AGENTS.md sections installed per kind of application, managed AGENTS.md sections that update themselves, and tasks — all at claude.costia.app, with nothing running locally.",
+      "description": "Your Claude Code setup as a Costia account: projects and how they are laid out on disk, a tagged catalogue of skills, plugins, MCP servers and AGENTS.md sections installed per kind of application, managed AGENTS.md sections that update themselves, setup flows for what an item needs outside the repository, stores and a marketplace to share and install from, and tasks — all at claude.costia.app, with nothing running locally but the plugin.",
       "version": "0.2.0",
       "author": { "name": "Costia", "url": "https://costia.app" },
       "category": "productivity",
-      "keywords": ["costia", "agents-md", "skills", "catalog", "tasks", "team", "onboarding"],
+      "keywords": ["costia", "agents-md", "skills", "catalog", "setup-flows", "marketplace", "tasks", "team", "onboarding"],
       "license": "MIT",
       "source": "./plugins/costia",
       "homepage": "https://claude.costia.app",
