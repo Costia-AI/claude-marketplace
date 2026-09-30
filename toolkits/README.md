@@ -1,9 +1,12 @@
 # Toolkits
 
 Ready-made catalogue items for [Costia Claude Tools](https://claude.costia.app) and the setup flows
-they need. Each toolkit is generic: nothing in it names a project, an app, an account or a URL of
-its author. Everything specific to a repository is a **setup-flow parameter**, asked once by the
-costia plugin's local wizard and written to `.claude/costia/params.env` for the scripts to read.
+they need. The skills and flows are generic: nothing in them names a project, an app, an account or a
+URL of their author. Everything specific to a repository is a **setup-flow parameter**, asked once by
+the costia plugin's local wizard and written to `.claude/costia/params.env` for the scripts to read.
+The one exception is `javirub-conventions`, an `AGENTS.md` section with its author's own authorship
+and language rules, named and tagged after him; it is published as it is, as an example of a section
+for the `user` destination.
 
 | Toolkit | Kind | Tags | Destination | Needs (flows) |
 |---|---|---|---|---|
