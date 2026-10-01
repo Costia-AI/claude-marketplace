@@ -172,9 +172,8 @@ function itemFiles(toolkit) {
 }
 
 async function personalWorkspace() {
-  const answer = await api("GET", "/v1/workspaces");
-  const list = answer.workspaces ?? answer;
-  const personal = list.find((w) => w.kind === "PERSONAL");
+  const { workspaces } = await api("GET", "/v1/me");
+  const personal = workspaces.find((w) => w.kind === "PERSONAL");
   if (!personal) throw new Error("No personal workspace; pass --workspace.");
   return personal.slug;
 }
