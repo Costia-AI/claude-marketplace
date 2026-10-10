@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rm -rf ../../plugins/costia/dist && bun build src/main.ts --target=node --format=esm --minify --splitting --outdir=../../plugins/costia/dist --entry-naming=costia.mjs --chunk-naming=chunk-[hash].mjs",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun check"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.2.0",
