@@ -53,9 +53,9 @@ The flow spec, the scopes, the checks and what the wizard does are specified in
 
 ```sh
 /costia:login                                   # in Claude Code, once (or export COSTIA_TOKEN)
-node toolkits/validate.mjs
-node toolkits/publish.mjs                       # dry run: the plan
-node toolkits/publish.mjs --commit [--workspace <slug>] [--only <slug>]... [--changelog "…"]
+bun toolkits/validate.mjs
+bun toolkits/publish.mjs                        # dry run: the plan
+bun toolkits/publish.mjs --commit [--workspace <slug>] [--only <slug>]... [--changelog "…"]
 ```
 
 Re-running is harmless: identical content does not make a new version. Publishing makes items
@@ -69,4 +69,4 @@ available in your workspace; to offer them to other people, add them to a store 
    this computer, `project` for what every member shares, `project_user` or `user` for what is yours.
 3. Prove each step with a check where one exists; `verify` is what decides whether the item is applied.
 4. Write `claude` steps as instructions for Claude working in the repository, with a check after.
-5. `node toolkits/validate.mjs`, then publish.
+5. `bun toolkits/validate.mjs`, then publish.

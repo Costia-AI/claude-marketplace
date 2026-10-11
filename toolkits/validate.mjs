@@ -1,9 +1,9 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Checks every toolkit and setup flow here against the rules the backend enforces on publish
  * (costia-claudetools docs/setup-flows.md §2, docs/plugin-protocol.md "Destinations").
  *
- *   node toolkits/validate.mjs
+ *   bun toolkits/validate.mjs
  *
  * Exits 1 with one line per problem. `publish.mjs` runs it first and refuses to publish on any.
  */

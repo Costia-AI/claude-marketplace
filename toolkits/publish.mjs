@@ -1,9 +1,9 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Publishes the setup flows and toolkits in this folder to a Costia Claude Tools workspace.
  *
- *   node toolkits/publish.mjs                              dry run: validates and prints the plan
- *   node toolkits/publish.mjs --commit [--workspace slug] [--only slug]... [--changelog "…"]
+ *   bun toolkits/publish.mjs                               dry run: validates and prints the plan
+ *   bun toolkits/publish.mjs --commit [--workspace slug] [--only slug]... [--changelog "…"]
  *
  * Flows go first, in dependency order, then items. An item that exists (same workspace, kind and
  * slug) gets its metadata updated and a new version; the backend returns the latest version
